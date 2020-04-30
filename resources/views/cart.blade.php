@@ -18,6 +18,68 @@
             padding-bottom: 20px;
             padding-top: 20px;
         }
+        .qty-label {
+          display: inline-block;
+          font-weight: 500;
+          font-size: 12px;
+          text-transform: uppercase;
+          margin-right: 15px;
+          margin-bottom: 0px;
+        }
+        .qty-label .input-number {
+          width: 90px;
+          display: inline-block;
+        }
+        .input-number {
+          position: relative;
+        }
+
+        .input-number input[type="number"]::-webkit-inner-spin-button, .input-number input[type="number"]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        .input-number input[type="number"] {
+          -moz-appearance: textfield;
+          height: 40px;
+          width: 100%;
+          border: 1px solid #E4E7ED;
+          background-color: #FFF;
+          padding: 0px 35px 0px 15px;
+        }
+
+        .input-number .qty-up, .input-number .qty-down {
+          position: absolute;
+          display: block;
+          width: 20px;
+          height: 20px;
+          border: 1px solid #E4E7ED;
+          background-color: #FFF;
+          text-align: center;
+          font-weight: 700;
+          cursor: pointer;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+        }
+
+        .input-number .qty-up {
+          right: 0;
+          top: 0;
+          border-bottom: 0px;
+        }
+
+        .input-number .qty-down {
+          right: 0;
+          bottom: 0;
+        }
+
+        .input-number .qty-up:hover, .input-number .qty-down:hover {
+          background-color: #E4E7ED;
+          color: #D10024;
+        }
+
     </style>
 </head>
 <body>
@@ -95,10 +157,21 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="item in items">
+                    <tr v-for="product in items">
                         <td>@{{ item.id }}</td>
                         <td>@{{ item.name }}</td>
-                        <td>@{{ item.quantity }}</td>
+                        <td>
+                            <div class="qty-label">
+                                <div class="input-number">
+                                <input type="hidden" v-model="item.id = product.id ">
+                                <input type="hidden" v-model="item.name = product.name ">
+                                <input type="hidden" v-model="item.price = product.price ">
+                                <input disabled width="5"  class="" type="number" v-model="product.quantity" >
+                                <span class="qty-up" v-on:click="addItem()">+</span>
+                                <span class="qty-down" v-on:click="downItem(item.id)">-</span>
+                                </div>
+                            </div>  
+                        </td>
                         <td>@{{ item.price }}</td>
                         <td>
                             <button v-on:click="removeItem(item.id)" class="btn btn-sm btn-danger">remove</button>
@@ -202,21 +275,18 @@
         </div>
     </div>
 </div>
-<script
-        src="https://code.jquery.com/jquery-3.2.1.min.js"
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"
         integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
         crossorigin="anonymous"></script>
+
 <script src="https://unpkg.com/vue"></script>
 <script src="https://cdn.jsdelivr.net/vue.resource/1.3.1/vue-resource.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 <script>
     (function($) {
-
         var _token = '<?php echo csrf_token() ?>';
-
         $(document).ready(function() {
-
             var app = new Vue({
                 el: '#app',
                 data: {
@@ -242,7 +312,6 @@
                             description: 'Value Added Tax'
                         }
                     },
-
                     options: {
                         target: [
                             {label: 'Apply to SubTotal', key: 'subtotal'},
@@ -255,9 +324,7 @@
                 },
                 methods: {
                     addItem: function() {
-
                         var _this = this;
-
                         this.$http.post('/cart',{
                             _token:_token,
                             id:_this.item.id,
@@ -271,9 +338,7 @@
                         });
                     },
                     addCartCondition: function() {
-
                         var _this = this;
-
                         this.$http.post('/cart/conditions',{
                             _token:_token,
                             name:_this.cartCondition.name,
@@ -287,9 +352,7 @@
                         });
                     },
                     clearCartCondition: function() {
-
                         var _this = this;
-
                         this.$http.delete('/cart/conditions?_token=' + _token).then(function(success) {
                             _this.loadItems();
                         }, function(error) {
@@ -297,9 +360,7 @@
                         });
                     },
                     removeItem: function(id) {
-
                         var _this = this;
-
                         this.$http.delete('/cart/'+id,{
                             params: {
                                 _token:_token
@@ -311,9 +372,7 @@
                         });
                     },
                     loadItems: function() {
-
                         var _this = this;
-
                         this.$http.get('/cart',{
                             params: {
                                 limit:10
@@ -327,18 +386,31 @@
                         });
                     },
                     loadCartDetails: function() {
-
                         var _this = this;
-
                         this.$http.get('/cart/details').then(function(success) {
                             _this.details = success.body.data;
+                        }, function(error) {
+                            console.log(error);
+                        });
+                    },
+                    downItem: function (id) {
+                     var _this = this;
+                     var _id = id;
+                     var i = _this.items.length - _id;
+                     var resta = _this.items[i].quantity - 1;
+                        this.$http.put('/cart/'+id,{
+                            _token:_token,
+                            id: _this.items[i].id,
+                            qty: resta
+                            
+                        }).then(function(success) {
+                            _this.loadItems();
                         }, function(error) {
                             console.log(error);
                         });
                     }
                 }
             });
-
             var wishlist = new Vue({
                 el: '#wishlist',
                 data: {
@@ -361,9 +433,7 @@
                 },
                 methods: {
                     addItem: function() {
-
                         var _this = this;
-
                         this.$http.post('/wishlist',{
                             _token:_token,
                             id:_this.item.id,
@@ -377,9 +447,7 @@
                         });
                     },
                     removeItem: function(id) {
-
                         var _this = this;
-
                         this.$http.delete('/wishlist/'+id,{
                             params: {
                                 _token:_token
@@ -391,9 +459,7 @@
                         });
                     },
                     loadItems: function() {
-
                         var _this = this;
-
                         this.$http.get('/wishlist',{
                             params: {
                                 limit:10
@@ -407,9 +473,7 @@
                         });
                     },
                     loadCartDetails: function() {
-
                         var _this = this;
-
                         this.$http.get('/wishlist/details').then(function(success) {
                             _this.details = success.body.data;
                         }, function(error) {
@@ -418,9 +482,7 @@
                     }
                 }
             });
-
         });
-
     })(jQuery);
 </script>
 </body>
